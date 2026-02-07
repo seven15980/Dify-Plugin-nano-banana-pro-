@@ -1,0 +1,99 @@
+identity:
+  name: ai_generate
+  author: 16api.com
+  label:
+    en_US: AI Image Generation
+    zh_Hans: AI 图像生成
+
+description:
+  human:
+    en_US: Generate images from text descriptions, or transform existing images with AI. Supports both text-to-image and image-to-image modes.
+    zh_Hans: 从文字描述生成图片，或使用 AI 转换现有图片。支持文生图和图生图两种模式。
+  llm: Generate images from text prompts or transform existing images using Gemini AI. Supports text-to-image (no input images) and image-to-image (with reference images) modes. Includes aspect ratio and quality control.
+
+parameters:
+  - name: image_files
+    type: files
+    required: false
+    label:
+      en_US: Input Images (Optional)
+      zh_Hans: 输入图片（可选）
+    human_description:
+      en_US: Optional reference images for transformation or fusion (max 14 images). If not provided, will generate image from text only.
+      zh_Hans: 可选的参考图片，用于转换或融合（最多 14 张）。如果不提供，将仅根据文字生成图片。
+    llm_description: Optional input images that will be transformed or fused according to the prompt. If not provided, the tool will generate an image from text only.
+    form: form
+
+  - name: prompt
+    type: string
+    required: true
+    label:
+      en_US: Description / Instructions
+      zh_Hans: 描述 / 指令
+    human_description:
+      en_US: Describe the image you want to generate, or how to transform the uploaded image (e.g., "a cat on the moon" or "change background to beach")
+      zh_Hans: 描述你想生成的图片，或如何转换上传的图片（例如："月球上的猫咪"或"把背景改成沙滩"）
+    llm_description: Text description for image generation, or transformation instructions for uploaded images
+    form: llm
+
+  - name: aspect_ratio
+    type: select
+    required: false
+    default: "auto"
+    label:
+      en_US: Aspect Ratio
+      zh_Hans: 宽高比
+    human_description:
+      en_US: Output image aspect ratio. Choose 'auto' to let AI decide based on your prompt.
+      zh_Hans: 输出图片的宽高比。选择 'auto' 让 AI 根据提示词自动决定。
+    form: form
+    options:
+      - value: "auto"
+        label:
+          en_US: Auto (AI decides)
+          zh_Hans: 自动（AI 决定）
+      - value: "1:1"
+        label:
+          en_US: 1:1 (Square)
+          zh_Hans: 1:1（正方形）
+      - value: "3:4"
+        label:
+          en_US: 3:4 (Portrait)
+          zh_Hans: 3:4（竖屏）
+      - value: "4:3"
+        label:
+          en_US: 4:3 (Landscape)
+          zh_Hans: 4:3（横屏）
+      - value: "9:16"
+        label:
+          en_US: 9:16 (Vertical)
+          zh_Hans: 9:16（竖向）
+      - value: "16:9"
+        label:
+          en_US: 16:9 (Widescreen)
+          zh_Hans: 16:9（宽屏）
+
+  - name: image_size
+    type: select
+    required: false
+    default: "2K"
+    label:
+      en_US: Image Quality
+      zh_Hans: 图片质量
+    human_description:
+      en_US: Output image quality/resolution
+      zh_Hans: 输出图片的质量/分辨率
+    form: form
+    options:
+      - value: "1K"
+        label:
+          en_US: 1K (Standard)
+          zh_Hans: 1K（标清）
+      - value: "2K"
+        label:
+          en_US: 2K (High Definition)
+          zh_Hans: 2K（高清）
+      - value: "4K"
+        label:
+          en_US: 4K (Ultra HD)
+          zh_Hans: 4K（超高清）
