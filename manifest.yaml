@@ -29,4 +29,6 @@ resource:
   permission:
     tool:
       enabled: true
+tags:
+- image
 type: plugin
