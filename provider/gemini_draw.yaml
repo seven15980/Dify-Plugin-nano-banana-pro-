@@ -1,40 +1,44 @@
 identity:
-  author: 16api.com
+  author: api16
   name: gemini_draw
   label:
     en_US: Nano Banana Pro
     zh_Hans: Nano Banana Pro
   description:
-    en_US: AI Image Generation powered by Gemini. Supports text-to-image and image-to-image modes.
-    zh_Hans: 基于 Gemini 的 AI 图像生成。支持文生图和图生图两种模式。
+    en_US: Generate and edit images with Nano Banana Pro (Gemini 3 Pro Image) through SteadyRouter, an independent API gateway not affiliated with Google.
+    zh_Hans: 通过 SteadyRouter 用 Nano Banana Pro（Gemini 3 Pro Image）生成、修改图片。SteadyRouter 是独立的 API 网关，与 Google 没有关联。
   icon: icon.svg
 
 credentials_for_provider:
+  steadyrouter_api_key:
+    type: secret-input
+    required: false
+    label:
+      en_US: SteadyRouter API Key
+      zh_Hans: SteadyRouter API Key
+    placeholder:
+      en_US: Paste your SteadyRouter API key
+      zh_Hans: 粘贴你的 SteadyRouter API Key
+    help:
+      en_US: Get your API key from SteadyRouter
+      zh_Hans: 从 SteadyRouter 获取 API Key
+    url: https://www.steadyrouter.com/sign-up?aff=qpa5
   api_key:
     type: secret-input
-    required: true
-    label:
-      en_US: API Key
-      zh_Hans: API 密钥
-    placeholder:
-      en_US: Enter your API Key from 16api.com
-      zh_Hans: 输入你从 16api.com 获取的 API 密钥
-    help:
-      en_US: Register at https://www.16api.com to get your API Key
-      zh_Hans: 在 https://www.16api.com 注册以获取 API 密钥
-  base_url:
-    type: text-input
     required: false
-    default: "https://www.16api.com"
     label:
-      en_US: API Base URL
-      zh_Hans: API 基础地址
+      en_US: Legacy 16api Key (only for users who upgraded from 0.1.x)
+      zh_Hans: 旧版 16api 密钥（只给从 0.1.x 升级来的老用户）
     placeholder:
-      en_US: https://www.16api.com
-      zh_Hans: https://www.16api.com
+      en_US: Do not put a SteadyRouter key here. New users, leave this empty.
+      zh_Hans: SteadyRouter 的 Key 别填这里，新用户留空
     help:
-      en_US: Default is 16api.com, no need to change
-      zh_Hans: 默认为 16api.com，无需修改
+      en_US: Only for existing users who upgraded from 0.1.x. Do not put a SteadyRouter key here. If both fields are filled in, SteadyRouter is used.
+      zh_Hans: 只给从 0.1.x 升级来的老用户，SteadyRouter 的 Key 别填这里。两个都填时走 SteadyRouter。
+
+extra:
+  python:
+    source: provider/gemini_draw.py
 
 tools:
   - tools/ai_generate.yaml

@@ -2,9 +2,14 @@ from collections.abc import Generator
 from typing import Any
 import requests
 import base64
+import time
 
 from dify_plugin import Tool
 from dify_plugin.entities.tool import ToolInvokeMessage
+from srclient import GeneratedFile, SRClient, SRError, image_size_for, sniff
+
+# Workflows saved on 0.1.1 or earlier have no model in their node. They were always Pro, so they must stay Pro.
+DEFAULT_MODEL = 'gemini-3-pro-image-preview'
 
 
 class AiGenerate(Tool):
@@ -13,6 +18,10 @@ class AiGenerate(Tool):
     - Text-to-Image: Generate images from text descriptions (no input images required)
     - Image-to-Image: Transform and fuse multiple images based on text instructions
     Supports up to 14 reference images (6 high-fidelity objects + 5 persons + 3 others).
+
+    Two routes, chosen once per call by which key is configured, and each key only ever goes to its own host:
+    - steadyrouter_api_key: SteadyRouter. Used whenever it is filled in, with no fallback to the other route.
+    - api_key: the legacy route, for people who upgraded from 0.1.x with a 16api key. Unchanged from 0.1.x.
     """
 
     # Gemini 3 Pro Image 的限制
@@ -34,21 +43,9 @@ class AiGenerate(Tool):
             ToolInvokeMessage: Text messages for progress/errors and blob message for the generated image
         """
 
-        # 【调试日志】打印参数信息，帮助定位迭代中文件丢失问题
-        import logging
-        logging.warning(f"[DEBUG image_to_image] tool_parameters keys: {list(tool_parameters.keys())}")
-        logging.warning(f"[DEBUG image_to_image] image_files type: {type(tool_parameters.get('image_files'))}")
-        image_files_debug = tool_parameters.get('image_files')
-        if isinstance(image_files_debug, list):
-            logging.warning(f"[DEBUG image_to_image] image_files length: {len(image_files_debug)}")
-            for i, f in enumerate(image_files_debug):
-                logging.warning(f"[DEBUG image_to_image] file[{i}] type: {type(f)}, value: {f}")
-        else:
-            logging.warning(f"[DEBUG image_to_image] image_files value: {image_files_debug}")
-
-        # 【关键修复】立即提取并移除 image_files，避免 JSON 序列化问题
-        # Dify 会缓存 tool_parameters 到 Redis，File 对象无法被序列化
-        image_files = tool_parameters.pop('image_files', None)
+        # 【关键修复】使用 get 而不是 pop，避免破坏 Dify 内部参数传递
+        # 不要修改 tool_parameters，让 Dify 自己处理序列化
+        image_files = tool_parameters.get('image_files', None)
 
         # 处理 image_files 的各种格式，统一转换为列表
         valid_files = []
@@ -86,60 +83,81 @@ class AiGenerate(Tool):
             return
         
         # Get credentials from runtime (configured in plugin settings)
-        api_key = self.runtime.credentials.get('api_key')
-        if not api_key:
-            yield self.create_text_message("❌ 错误：未配置 API Key，请在插件设置中配置")
+        steadyrouter_key = (self.runtime.credentials.get('steadyrouter_api_key') or '').strip()
+        api_key = (self.runtime.credentials.get('api_key') or '').strip()
+        if not steadyrouter_key and not api_key:
+            yield self.create_text_message(
+                "❌ No API key configured. Add your SteadyRouter API key in the plugin settings. "
+                "未配置 API Key，请在插件设置中填写 SteadyRouter API Key。"
+            )
             return
 
-        base_url = self.runtime.credentials.get('base_url', 'https://www.16api.com')
+        # 固定使用官方 API 地址，确保服务稳定性和安全性
+        base_url = 'https://www.16api.com'
+        model = tool_parameters.get('model') or DEFAULT_MODEL
         aspect_ratio = tool_parameters.get('aspect_ratio', 'auto')
         image_size = tool_parameters.get('image_size', '2K')
-        
-        # --- 1. 处理所有输入图片，转换为 base64 ---
-        image_parts = []
+        # Flash Lite refuses 2K and 4K, and the form cannot change this field when the model changes.
+        image_size, size_note = image_size_for(model, image_size)
+        if size_note:
+            yield self.create_text_message(size_note)
+
+        # --- 1. 读取所有输入图片 ---
+        uploads = []
         image_count = len(valid_files)
 
         if not is_text_to_image:
             # 图生图模式：处理输入图片
             try:
-                yield self.create_text_message(f"⏳ 正在处理 {image_count} 张输入图片...")
-
                 for idx, image_file in enumerate(valid_files):
                     # Get file binary content
-                    # Note: In new plugin system, file handling might be different
-                    # This assumes File object has blob attribute or similar
+                    # Try different methods to get image data
+                    img_binary = None
+
+                    # Method 1: Try blob attribute
                     if hasattr(image_file, 'blob'):
                         img_binary = image_file.blob
+                    # Method 2: Try read() method
                     elif hasattr(image_file, 'read'):
                         img_binary = image_file.read()
-                    else:
-                        # Fallback: assume image_file is already binary data or has __bytes__
+                    # Method 3: Try getting file path and reading
+                    elif hasattr(image_file, 'path'):
+                        with open(image_file.path, 'rb') as f:
+                            img_binary = f.read()
+                    # Method 4: Try direct bytes conversion
+                    elif hasattr(image_file, '__bytes__'):
                         img_binary = bytes(image_file)
+                    else:
+                        raise ValueError(f"无法读取图片文件，不支持的文件对象类型: {type(image_file)}")
 
-                    # 转换为 base64
-                    img_b64 = base64.b64encode(img_binary).decode('utf-8')
+                    # 验证图片数据
+                    if not img_binary:
+                        raise ValueError(f"图片 {idx+1} 读取失败：数据为空")
 
                     # 获取 MIME 类型
                     mime_type = getattr(image_file, 'mime_type', 'image/jpeg') or 'image/jpeg'
-
-                    # 构建 inline_data 部分
-                    image_parts.append({
-                        "inline_data": {
-                            "mime_type": mime_type,
-                            "data": img_b64
-                        }
-                    })
-
-                yield self.create_text_message(f"✅ 成功处理 {image_count} 张图片")
+                    uploads.append((img_binary, mime_type))
 
             except Exception as e:
                 yield self.create_text_message(f"❌ 处理输入图片失败: {str(e)}")
                 return
-        else:
-            # 文生图模式：无需处理图片
-            yield self.create_text_message("📝 文生图模式：将根据文字描述生成图片")
-        
+
+        if steadyrouter_key:
+            yield from self._via_steadyrouter(steadyrouter_key, model, prompt, aspect_ratio, image_size, uploads)
+            return
+
         # --- 2. 构建 Gemini API 请求 ---
+        # 转换为 base64，构建 inline_data 部分
+        image_parts = [
+            {
+                "inline_data": {
+                    "mime_type": mime_type,
+                    "data": base64.b64encode(img_binary).decode('utf-8')
+                }
+            }
+            for img_binary, mime_type in uploads
+        ]
+
         # 构建 parts 数组：先放 prompt，再放所有图片
         # 按照 Gemini API 文档格式
         parts = [{"text": prompt}] + image_parts
@@ -178,13 +196,8 @@ class AiGenerate(Tool):
         
         # --- 3. 调用 Gemini API ---
         try:
-            if is_text_to_image:
-                yield self.create_text_message("🎨 正在使用 Gemini 根据文字描述生成图片...")
-            else:
-                yield self.create_text_message(f"🎨 正在使用 Gemini 融合 {image_count} 张图片生成新图...")
-            
             # 构建 API URL（根据文档，使用 query parameter 传递 key）
-            api_url = f"{base_url}/v1beta/models/gemini-3-pro-image-preview:generateContent"
+            api_url = f"{base_url}/v1beta/models/{model}:generateContent"
             
             headers = {
                 "Content-Type": "application/json"
@@ -274,26 +287,49 @@ class AiGenerate(Tool):
             else:
                 file_extension = ".jpg"
             
-            # 生成文件名（根据模式区分）
-            if is_text_to_image:
-                filename = f"gemini_text2img_{user_id[:6]}{file_extension}"
-            else:
-                filename = f"gemini_fusion_{image_count}imgs_{user_id[:6]}{file_extension}"
-
             # 返回图片文件（使用 create_blob_message）
             yield self.create_blob_message(
                 blob=img_data,
                 meta={
                     'mime_type': output_mime_type,
-                    'filename': filename
+                    'filename': self._file_name(image_count, file_extension)
                 }
             )
 
-            if is_text_to_image:
-                yield self.create_text_message("✅ 文生图完成！")
-            else:
-                yield self.create_text_message(f"✅ 图片融合完成！（基于 {image_count} 张输入图片）")
-            
         except Exception as e:
             yield self.create_text_message(f"❌ 转换图片文件失败: {str(e)}")
             return
+
+    def _via_steadyrouter(
+        self,
+        api_key: str,
+        model: str,
+        prompt: str,
+        aspect_ratio: str,
+        image_size: str,
+        uploads: list[tuple[bytes, str]],
+    ) -> Generator[ToolInvokeMessage, None, None]:
+        references = [GeneratedFile(data, sniff(data) or mime) for data, mime in uploads]
+        try:
+            files = SRClient(api_key, user_agent="steadyrouter-dify").generate_image(
+                model, prompt, aspect_ratio=aspect_ratio, image_size=image_size, images=references
+            )
+        except SRError as exc:
+            yield self.create_text_message(f"❌ SteadyRouter: {exc}")
+            return
+        for item in files:
+            yield self.create_blob_message(
+                blob=item.data,
+                meta={
+                    'mime_type': item.mime,
+                    'filename': self._file_name(len(uploads), f".{item.extension}")
+                }
+            )
+
+    @staticmethod
+    def _file_name(image_count: int, file_extension: str) -> str:
+        # 生成文件名（根据模式区分）
+        timestamp = str(int(time.time() * 1000))[-8:]  # 使用时间戳后8位
+        if image_count == 0:
+            return f"gemini_text2img_{timestamp}{file_extension}"
+        return f"gemini_fusion_{image_count}imgs_{timestamp}{file_extension}"

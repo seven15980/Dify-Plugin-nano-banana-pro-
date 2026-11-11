@@ -1,98 +1,40 @@
-# Nano Banana Pro - AI Image Generation Plugin
+# Nano Banana Pro
 
-![Version](https://img.shields.io/badge/version-0.1.0-blue)
-![License](https://img.shields.io/badge/license-Apache--2.0-green)
-![Author](https://img.shields.io/badge/author-16api.com-orange)
+Generate and edit images in Dify with Nano Banana Pro (Gemini 3 Pro Image), through SteadyRouter.
 
-## 📖 Overview
+SteadyRouter is an independent API gateway. It is not affiliated with or endorsed by Google. The model name only says which model this plugin calls.
 
-Nano Banana Pro is a powerful Dify plugin that leverages Google's Gemini AI for image generation and transformation. It provides a unified **AI Image Generation** tool with dual capabilities:
+Upgrading from 0.1.x? Nothing changes: your existing key keeps working the way it did, and adding a SteadyRouter key is optional.
 
-**One Tool, Two Modes:**
-1. **Text-to-Image Mode** - Generate images from text descriptions only (no input images required)
-2. **Image-to-Image Mode** - Transform or fuse up to 14 reference images with text instructions
+## What it does
 
-## ✨ Features
+- **Text to image**: describe the picture you want.
+- **Image to image**: give up to 14 reference images and say how to change or combine them.
+- **Models**: Gemini 3 Pro (default, higher quality), Gemini 3.1 Flash (faster), or the newer Gemini 3 Pro Image, Gemini 3.1 Flash Image, Nano Banana 2.1 and Gemini 3.1 Flash Lite Image. Flash Lite only supports 1K, so it always uses 1K whatever the quality setting says. With a legacy key, the newer models depend on what that key can use.
+- **Aspect ratio**: auto, 1:1, 3:4, 4:3, 9:16 or 16:9.
+- **Quality**: 1K, 2K or 4K.
 
-- 🎨 **Dual Mode Operation** - Text-only or image transformation in one tool
-- 📐 **Multiple Aspect Ratios** - 1:1, 3:4, 4:3, 9:16, 16:9, or Auto
-- 🖼️ **Quality Levels** - 1K (Standard), 2K (HD), 4K (Ultra HD)
-- 🔄 **Multi-Image Fusion** - Combine up to 14 images
-- 🌐 **Multi-Language** - English & Chinese interface
-- ⚡ **Gemini Powered** - Fast and high-quality generation
+## Setup
 
-## 🚀 Usage
+1. [Create a SteadyRouter account](https://www.steadyrouter.com/sign-up), add funds, and open **API Keys** → **Create API Key** in the console.
+2. In Dify, open **Tools** → **Nano Banana Pro** → **Authorize** and paste the key into **SteadyRouter API Key**. Leave the legacy field empty.
+3. Add the **AI Image Generation** tool to your workflow or agent.
 
-### Mode 1: Text-to-Image (文生图)
+## Usage notes
 
-Generate images from text descriptions without uploading any images:
+- Images come back as files, which Dify stores. Links that expire are never passed on to you.
+- Choose the model, aspect ratio and quality in the tool's settings. Higher quality costs more.
+- Current prices are on [Model Square](https://www.steadyrouter.com/pricing). Requests that fail are not charged.
+- In a workflow, allow the tool node several minutes before it times out.
 
-```
-Tool: AI Image Generation
-Input Images: [Leave empty]
-Description: "A serene mountain landscape at sunset with aurora borealis"
-Aspect Ratio: 16:9
-Quality: 2K
-```
+## Requirements
 
-### Mode 2: Image-to-Image (图生图)
+- Needs a SteadyRouter API key and outbound HTTPS access to `api.steadyrouter.com`.
+- Files are downloaded from the storage links the gateway returns, over HTTPS, without your key. Addresses on private networks are refused.
 
-Transform or edit existing images:
+## Links
 
-```
-Tool: AI Image Generation
-Input Images: [Upload 1-14 images]
-Instructions: "Make it look like a watercolor painting, add falling snow"
-Aspect Ratio: auto
-Quality: 2K
-```
-
-## 🔧 Configuration
-
-1. **Install the plugin** in Dify
-2. **Register at 16api.com**
-   - Visit: https://www.16api.com
-   - Sign up for a free account
-   - Get your API Key from the dashboard
-3. **Configure the plugin**
-   - Open plugin settings in Dify
-   - Enter your API Key from 16api.com
-   - Base URL is pre-configured (no need to change)
-4. **Start using!** Create workflows with the AI Image Generation tool
-
-## 📋 Requirements
-
-- Dify Platform v1.0.0+
-- 16api.com account (free registration at https://www.16api.com)
-- API Key from 16api.com dashboard
-
-## 🐛 Known Issues & Fixes
-
-This plugin includes fixes for several issues discovered during development:
-
-- ✅ API response parsing (supports both camelCase and snake_case)
-- ✅ File serialization handling
-- ✅ Proper image URL generation
-
-For detailed development notes, see the development documentation.
-
-## 📝 License
-
-Apache-2.0
-
-## 🤝 Contributing
-
-Contributions are welcome! Please feel free to submit a Pull Request.
-
-## 📧 Contact
-
-- Author: 16api.com
-- Website: https://16api.com
-- Repository: https://github.com/seven15980/Dify-Plugin-nano-banana-pro-
-- Issues: https://github.com/seven15980/Dify-Plugin-nano-banana-pro-/issues
-
-## 🙏 Acknowledgments
-
-Built with:
-- Google Gemini AI
-- Dify Platform
+- Source code: https://github.com/seven15980/Dify-Plugin-nano-banana-pro-
+- Docs: https://www.steadyrouter.com/site/docs.html
+- Privacy: see [PRIVACY.md](PRIVACY.md)
+- Contact: support@steadyrouter.com

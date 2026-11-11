@@ -1,9 +1,13 @@
 identity:
   name: ai_generate
-  author: 16api.com
+  author: api16
   label:
     en_US: AI Image Generation
     zh_Hans: AI 图像生成
+
+extra:
+  python:
+    source: tools/ai_generate.py
 
 description:
   human:
@@ -35,6 +39,43 @@ parameters:
       zh_Hans: 描述你想生成的图片，或如何转换上传的图片（例如："月球上的猫咪"或"把背景改成沙滩"）
     llm_description: Text description for image generation, or transformation instructions for uploaded images
     form: llm
+
+  - name: model
+    type: select
+    required: false
+    default: "gemini-3-pro-image-preview"
+    label:
+      en_US: Image Model
+      zh_Hans: 生图模型
+    human_description:
+      en_US: "Select the image generation model. Pro: higher quality; Flash: faster speed and lower cost."
+      zh_Hans: "选择生图模型。Pro：画质更高；Flash：速度更快、成本更低。"
+    form: form
+    options:
+      - value: "gemini-3-pro-image-preview"
+        label:
+          en_US: Gemini 3 Pro (High Quality)
+          zh_Hans: Gemini 3 Pro（高画质）
+      - value: "gemini-3.1-flash-image-preview"
+        label:
+          en_US: Gemini 3.1 Flash (Fast)
+          zh_Hans: Gemini 3.1 Flash（快速）
+      - value: "gemini-3-pro-image"
+        label:
+          en_US: Gemini 3 Pro Image
+          zh_Hans: Gemini 3 Pro Image
+      - value: "gemini-3.1-flash-image"
+        label:
+          en_US: Gemini 3.1 Flash Image
+          zh_Hans: Gemini 3.1 Flash Image
+      - value: "gemini-nano-banana-2.1"
+        label:
+          en_US: Nano Banana 2.1
+          zh_Hans: Nano Banana 2.1
+      - value: "gemini-3.1-flash-lite-image"
+        label:
+          en_US: Gemini 3.1 Flash Lite Image (1K only)
+          zh_Hans: Gemini 3.1 Flash Lite Image（仅 1K）
 
   - name: aspect_ratio
     type: select
