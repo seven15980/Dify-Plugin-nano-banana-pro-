@@ -1,10 +1,10 @@
-version: 0.2.0
+version: 0.2.1
 author: api16
 contact: support@steadyrouter.com
 created_at: 2026-02-07T00:00:00.000000+00:00
 description:
-  en_US: Generate and edit images with Nano Banana Pro (Gemini 3 Pro Image) through SteadyRouter, an independent API gateway not affiliated with Google.
-  zh_Hans: 通过 SteadyRouter 用 Nano Banana Pro（Gemini 3 Pro Image）生成、修改图片。SteadyRouter 是独立的 API 网关，与 Google 没有关联。
+  en_US: Text to image and image editing with Nano Banana Pro (Gemini 3 Pro Image) through SteadyRouter, an independent API gateway not affiliated with Google.
+  zh_Hans: 通过 SteadyRouter 用 Nano Banana Pro（Gemini 3 Pro Image）文生图、改图。SteadyRouter 是独立的 API 网关，与 Google 没有关联。
 icon: icon.svg
 label:
   en_US: Nano Banana Pro

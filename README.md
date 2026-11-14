@@ -1,10 +1,15 @@
 # Nano Banana Pro
 
-Generate and edit images in Dify with Nano Banana Pro (Gemini 3 Pro Image), through SteadyRouter.
+Text to image and image editing in Dify with Nano Banana Pro (Gemini 3 Pro Image), through SteadyRouter.
 
 SteadyRouter is an independent API gateway. It is not affiliated with or endorsed by Google. The model name only says which model this plugin calls.
 
-Upgrading from 0.1.x? Nothing changes: your existing key keeps working the way it did, and adding a SteadyRouter key is optional.
+Upgrading from 0.1.x? Your existing key keeps working the way it did. Adding a SteadyRouter key gets you more:
+
+- **Every model in this plugin**: Nano Banana 2.1, Gemini 3.1 Flash Image and Flash Lite Image work whatever your old key can use.
+- **Video and more image models with the same key**: install **SteadyRouter Image & Video Generation** for Seedance, Wan and Vidu videos, and for GPT Image, Seedream, Qwen Image and Flux.
+- **Fewer failed runs**: with smart routing (on by default for new keys), a request that fails in one upstream source is retried in another.
+- **Free trial credit** for new accounts, to try image generation before you pay.
 
 ## What it does
 
@@ -16,7 +21,7 @@ Upgrading from 0.1.x? Nothing changes: your existing key keeps working the way i
 
 ## Setup
 
-1. [Create a SteadyRouter account](https://www.steadyrouter.com/sign-up), add funds, and open **API Keys** → **Create API Key** in the console.
+1. [Create a SteadyRouter account](https://www.steadyrouter.com/sign-up) (new accounts get free trial credit to try image generation) and open **API Keys** → **Create API Key** in the console.
 2. In Dify, open **Tools** → **Nano Banana Pro** → **Authorize** and paste the key into **SteadyRouter API Key**. Leave the legacy field empty.
 3. Add the **AI Image Generation** tool to your workflow or agent.
 
@@ -26,6 +31,7 @@ Upgrading from 0.1.x? Nothing changes: your existing key keeps working the way i
 - Choose the model, aspect ratio and quality in the tool's settings. Higher quality costs more.
 - Current prices are on [Model Square](https://www.steadyrouter.com/pricing). Requests that fail are not charged.
 - In a workflow, allow the tool node several minutes before it times out.
+- Dify's new **Agents (beta)** cannot take files from tools yet: the run shows "Action failed" and unreadable text even though the image was made and charged. Until Dify fixes this, use the tool in a Workflow, a Chatflow or a classic Agent app.
 
 ## Requirements
 
